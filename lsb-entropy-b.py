@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: latin1 -*-
+# -*- coding: utf8 -*-
 """
 SYNOPSIS
 
@@ -42,25 +42,25 @@ def bits(char):
 #-------------------------------------------------------------------------------
 # MAIN 
 #-------------------------------------------------------------------------------
+if __name__ == "__main__":
+    parser = OptionParser("usage: %prog [OPTIONS] ARGS \nBitstring will be picked from STDIN")
 
-parser = OptionParser("usage: %prog [OPTIONS] ARGS \nBitstring will be picked from STDIN")
+    (options, args) = parser.parse_args()
 
-(options, args) = parser.parse_args()
-
-d = deque( )
-zeroes = 0
-ones = 0
-char = sys.stdin.read(1) 
-while char != '': 
-    for x in bits(ord(char)):
-        if x == '1':
-            ones+=1
-        else:
-            zeroes+=1
+    d = deque( )
+    zeroes = 0
+    ones = 0
     char = sys.stdin.read(1) 
+    while char != '': 
+        for x in bits(ord(char)):
+            if x == '1':
+                ones+=1
+            else:
+                zeroes+=1
+        char = sys.stdin.read(1) 
 
-print "Perc zeroes : %f" % ( zeroes / float(ones+zeroes) )
-print "Perc ones   : %f" % ( ones / float(ones+zeroes) )
+    print "Perc zeroes : %f" % ( zeroes / float(ones+zeroes) )
+    print "Perc ones   : %f" % ( ones / float(ones+zeroes) )
 
 
 

@@ -3,7 +3,7 @@
 """
 SYNOPSIS
 
-    
+Calculate the autocorrelation of a bitstream (presumably extracted from an image)
 
 DESCRIPTION
 
@@ -56,38 +56,38 @@ def bits(char):
 #-------------------------------------------------------------------------------
 # MAIN 
 #-------------------------------------------------------------------------------
+if __name__ == "__main__":
+    dists = [ y for y in dir(Distance)if callable(getattr(Distance,y))]
 
-dists = [ y for y in dir(Distance)if callable(getattr(Distance,y))]
+    parser = OptionParser("usage: %prog [OPTIONS] ARGS \nBitstring will be picked from STDIN")
 
-parser = OptionParser("usage: %prog [OPTIONS] ARGS \nBitstring will be picked from STDIN")
+    parser.add_option("-n", "--num",dest="num", action="store", type="int",
+                      default=8,help="number of autocorrelation to compute", metavar="NITERATIONS")
+    parser.add_option("-s", "--shift",dest="shift", action="store", type="int",
+                      default=1,help="bit shift for each iteration", metavar="BITSHIFT")
+    parser.add_option("-d", "--distance",dest="distance", action="store", type="string",
+                      default=dists[0],help="distance to use for calculation. Options: "+str(dists), metavar="DISTANCE")
 
-parser.add_option("-n", "--num",dest="num", action="store", type="int",
-                  default=8,help="number of autocorrelation to compute", metavar="NITERATIONS")
-parser.add_option("-s", "--shift",dest="shift", action="store", type="int",
-                  default=1,help="bit shift for each iteration", metavar="BITSHIFT")
-parser.add_option("-d", "--distance",dest="distance", action="store", type="string",
-                  default=dists[0],help="distance to use for calculation. Options: "+str(dists), metavar="DISTANCE")
+    (options, args) = parser.parse_args()
 
-(options, args) = parser.parse_args()
+    dst = options.distance
+    num = abs(options.num)
+    shft = abs(options.shift)
 
-dst = options.distance
-num = abs(options.num)
-shft = abs(options.shift)
+    distance = Distance()
+    d = deque( )
 
-distance = Distance()
-d = deque( )
-
-char = sys.stdin.read(1) 
-while char != '': 
-    [ d.append(x) for x in bits(ord(char)) ]
     char = sys.stdin.read(1) 
+    while char != '': 
+        [ d.append(x) for x in bits(ord(char)) ]
+        char = sys.stdin.read(1) 
 
-original = ''.join( x for x in d )
-for i in range(1,num+1):
-    d.rotate(shft)
-    shifted = ''.join(x for x in d)
-    corr = getattr(distance, dst )( original , shifted )
-    print " Shift %d Corr %f" % ( i*shft , corr )
+    original = ''.join( x for x in d )
+    for i in range(1,num+1):
+        d.rotate(shft)
+        shifted = ''.join(x for x in d)
+        corr = getattr(distance, dst )( original , shifted )
+        print " Shift %d Corr %f" % ( i*shft , corr )
 
 
 
