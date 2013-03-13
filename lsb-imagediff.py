@@ -82,7 +82,8 @@ if __name__ == "__main__":
     for x in range(min([s[0],so[0]])):
         for y in range(min([s[1],so[1]])):
             #print m[x,y]
-            r1,g1,b1,a1 = r,g,b,a = m[(x,y)]
+            r,g,b,a = m[(x,y)]
+            r1,g1,b1,a1 = (255,255,255,255)
             ro,go,bo,ao = mo[(x,y)]
             if ( 'r' in channels ): 
                  r1=r-ro

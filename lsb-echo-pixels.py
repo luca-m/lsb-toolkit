@@ -78,6 +78,7 @@ if __name__ == "__main__":
     f = xinit
     S = min(s[1],yend)
     s = yinit
+    vertical=options.vertical
     if vertical == True:
         F = min(s[1],yend)
         f = yinit
