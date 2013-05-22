@@ -42,20 +42,18 @@ def create_image(rawpixelfile,h,w,channels='rgb'):
 		bytes=f.read(len(channels))
 		while bytes!='':
 			if len(bytes)==len(channels):
-				(a,r,g,b)=(255,0,0,0)
+				(r,g,b)=(0,0,0)
 				for i in range(len(bytes)):
 					for c in channels:
-						if 'a'==c:
-							a=ord(bytes[i])
-						elif 'r'==c:
+						if 'r'==c:
 							r=ord(bytes[i])
 						elif 'g'==c:
 							g=ord(bytes[i])
 						elif 'b'==c:
 							b=ord(bytes[i])
-				pxls.append((a,r,g,b))
+				pxls.append((r,g,b))
 			bytes=f.read(len(channels))
-	img=Image.new(channels,(w,h))
+	img=Image.new('RGB',(w,h))
 	img.putdata(pxls)
 	return img
 
@@ -65,19 +63,18 @@ if __name__=='__main__':
 	parser.add_option("-f", "--file", dest="filename", action="store", type="string",
 			help="File where to load pixel data", metavar="FILE")
 	parser.add_option("-c", "--channel",dest="channel", action="store", type="string",
-			default='rgb',help="channels to consider [r][g][b][a]", metavar="CHANNEL")
+			default='rgb',help="channels to consider [r][g][b]", metavar="CHANNEL")
 	(options, args) = parser.parse_args()
 
 	if options.filename == None :
         	parser.error("Pixel file is mandatory!")
-	mtch=re.compile('[a|r|g|b]{1,4}').match(options.channel.lower())
+	mtch=re.compile('[r|g|b]{1,3}').match(options.channel.lower())
 	if mtch is None :
 		parser.error('ERROR: invalid channel specification')
 	inputf=options.filename
 	channels=mtch.group()
 	outim=inputf+"-"+channels+".png"
-	print "Usage: image-create.py <WIDTH> <HEIGHT> <INPIXELFILE> <OUTIMAGEFILE>"
-	w=h=int(math.sqrt(os.stat(inputf).st_size/len(channels)))
+	w=h=int(math.sqrt(os.stat(inputf).st_size/len(channels)))+1
 	img=create_image(inputf,h,w,channels)
 	img.save(outim)
 
