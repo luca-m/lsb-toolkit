@@ -30,8 +30,8 @@ VERSION
     0.2
 """
 
-import numpy as np
-import Image, sys, re
+import Image
+import re
 from optparse import OptionParser
 
 #-------------------------------------------------------------------------------
@@ -41,11 +41,11 @@ if __name__ == "__main__":
     
     parser = OptionParser("usage: %prog [OPTIONS] ARGS \nDefault output in <imagepath>-lsb.png")
     parser.add_option("-f", "--file", dest="filename", action="store", type="string",
-                      help="image to analyze", metavar="FILE")
+		    help="image to analyze", metavar="FILE")
     parser.add_option("-c", "--channel",dest="channel", action="store", type="string",
-                      default='rgb',help="channel to consider [r][g][b][a]", metavar="CHANNEL")
+		    default='rgb',help="channel to consider [r][g][b][a]", metavar="CHANNEL")
     parser.add_option("-b", "--bitnum",dest="bitnum", action="store", type="string",
-                      default="0",help="bit to consider in pixel\'s channels [0..7]", metavar="BITNUM")
+		    default="0",help="bit to consider in pixel\'s channels [0..7]", metavar="BITNUM")
     (options, args) = parser.parse_args()
 
     if options.filename == None :
