@@ -30,8 +30,8 @@ VERSION
     0.4
 """
 
-import numpy as np
-import Image, sys, re
+import Image
+import re
 from optparse import OptionParser
 
 
@@ -64,15 +64,23 @@ if __name__ == "__main__":
     inputor = options.original
     channels = mtch.group()
     #bitnum = [ int(b)%7 for b in options.bitnum ]
-    outim = inputim+"-diff-"+channels+".png"
-
+    #outim = inputim+"-diff-"+channels+".png"
+    if 'a' in channels:
+        outim = inputim+"-diff-"+channels+".png"
+    else:
+        outim = inputim+"-diff-"+channels+".bmp"
     n = Image.open(inputim)
-    n = n.convert('RGBA')
+    if 'a' in channels:
+    	n = n.convert('RGBA')
+    else:
+	n=n.convert('RGB')
     m = n.load()
     s = n.size
-
     no = Image.open(inputor)
-    no = no.convert('RGBA')
+    if 'a' in channels:
+    	no=no.convert('RGBA')
+    else:
+	no=no.convert('RGB')
     mo = no.load()
     so = no.size
 
@@ -82,9 +90,14 @@ if __name__ == "__main__":
     for x in range(min([s[0],so[0]])):
         for y in range(min([s[1],so[1]])):
             #print m[x,y]
-            r,g,b,a = m[(x,y)]
             r1,g1,b1,a1 = (255,255,255,255)
-            ro,go,bo,ao = mo[(x,y)]
+	    if 'a' in channels:
+            	r,g,b,a = m[(x,y)]
+            	ro,go,bo,ao = mo[(x,y)]
+	    else:
+                r,g,b=m[(x,y)]
+                ro,go,bo=mo[(x,y)]
+		a=a0=255
             if ( 'r' in channels ): 
                  r1=r-ro
             if ( 'g' in channels ): 
@@ -94,8 +107,16 @@ if __name__ == "__main__":
             if ( 'a' in channels ): 
                  a1=a-ao
             #print r,g,b,a,ro,go,bo,ao, r1,g1,b1,a1
-            m[(x,y)] = r1,g1,b1,a1
+	    if 'a' in channels:
+                 m[(x,y)] = r1,g1,b1,a1
+            else:
+		 m[(x,y)]=r1,g1,b1
+	    #m[(x,y)] = r1,g1,b1,a1
 
     print 'Writing output to file: %s' %(outim)
-    n.save(outim, "PNG")
+    #n.save(outim, "PNG")
+    if 'a' in channels:
+    	n.save(outim,'PNG')
+    else:
+	n.save(outim,'BMP')
 
