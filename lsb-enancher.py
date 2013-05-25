@@ -60,10 +60,16 @@ if __name__ == "__main__":
     inputim = options.filename
     channels = mtch.group()
     bitnum = [ int(b)%7 for b in options.bitnum ]
-    outim = inputim+"-lsb-"+channels+"-"+options.bitnum+".png"
-
+    if 'a' in channels:
+        outim = inputim+"-lsb-"+channels+"-"+options.bitnum+".png"
+    else:
+        outim = inputim+"-lsb-"+channels+"-"+options.bitnum+".bmp"
+	
     n = Image.open(inputim)
-    n = n.convert('RGBA')
+    if 'a' in channels:
+    	n = n.convert('RGBA')
+    else:
+	n=n.convert('RGB')
     m = n.load()
     s = n.size
 
@@ -73,7 +79,11 @@ if __name__ == "__main__":
     for x in range(s[0]):
         for y in range(s[1]):
             #print m[x,y]
-            r,g,b,a = m[(x,y)]
+	    if 'a' in channels:
+            	r,g,b,a = m[(x,y)]
+	    else:
+                r,g,b=m[(x,y)]
+		a=255
             r1 = 0
             g1 = 0
             b1 = 0
@@ -95,8 +105,14 @@ if __name__ == "__main__":
             else:
                  if ( 'a' in channels):
                       a1=0
-            m[(x,y)] = r1,g1,b1,a1
+	    if 'a' in channels:
+                 m[(x,y)] = r1,g1,b1,a1
+            else:
+		 m[(x,y)]=r1,g1,b1
 
     print 'Writing output to file: %s' %(outim)
-    n.save(outim, "PNG")
-
+    
+    if 'a' in channels:
+    	n.save(outim,'PNG')
+    else:
+	n.save(outim,'BMP')
