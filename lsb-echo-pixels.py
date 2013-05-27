@@ -29,9 +29,41 @@ VERSION
 
     0.3
 """
-import numpy as np
-import Image, sys, re
+import Image
+import sys
+import re
 from optparse import OptionParser
+
+
+def echoPixels(n,subimage,channels='rgb',vertical=False):
+    s = n.size
+    (xinit,yinit,xend,yend)=(subimage[0],subimage[1],subimage[2],subimage[3])
+    F = min(s[0],xend)
+    f = xinit
+    S = min(s[1],yend)
+    s = yinit
+    if vertical == True:
+        F = min(s[1],yend)
+        f = yinit
+        S = min(s[0],xend)
+        s = xinit
+    for x in range(f,F,1):
+        for y in range(s,S,1):
+            if vertical == True:
+                r,g,b,a = m[(y,x)]
+            else:
+                r,g,b,a = m[(x,y)]
+            r,g,b,a = m[(x,y)]
+            for chan in channels:
+                if 'r' == chan :
+                     sys.stdout.write(chr(r))
+                if 'g' == chan :
+                     sys.stdout.write(chr(g))
+                if 'b' == chan :
+                     sys.stdout.write(chr(b))
+                if 'a' == chan :
+                     sys.stdout.write(chr(a))
+
 
 #-------------------------------------------------------------------------------
 # MAIN 
@@ -70,35 +102,6 @@ if __name__ == "__main__":
     n = Image.open(inputim)
     n = n.convert('RGBA')
     m = n.load()
-    s = n.size
-    (xinit,yinit,xend,yend)=(subimage[0],subimage[1],subimage[2],subimage[3])
-    #print 'Image size: '+str(s)
-    #print 'Processing..'
-    F = min(s[0],xend)
-    f = xinit
-    S = min(s[1],yend)
-    s = yinit
-    vertical=options.vertical
-    if vertical == True:
-        F = min(s[1],yend)
-        f = yinit
-        S = min(s[0],xend)
-        s = xinit
-    for x in range(f,F,1):
-        for y in range(s,S,1):
-            if vertical == True:
-                r,g,b,a = m[(y,x)]
-            else:
-                r,g,b,a = m[(x,y)]
-            #print m[x,y]
-            r,g,b,a = m[(x,y)]
-            for chan in channels:
-                if 'r' == chan :
-                     sys.stdout.write(chr(r))
-                if 'g' == chan :
-                     sys.stdout.write(chr(g))
-                if 'b' == chan :
-                     sys.stdout.write(chr(b))
-                if 'a' == chan :
-                     sys.stdout.write(chr(a))
+    
+    echoPixels(n,subimage,channels,options.vertical)
 

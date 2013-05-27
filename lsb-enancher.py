@@ -67,9 +67,9 @@ if __name__ == "__main__":
 	
     n = Image.open(inputim)
     if 'a' in channels:
-    	n = n.convert('RGBA')
+    	n=n.convert('RGBA')
     else:
-	n=n.convert('RGB')
+        n=n.convert('RGB')
     m = n.load()
     s = n.size
 
@@ -78,41 +78,40 @@ if __name__ == "__main__":
 
     for x in range(s[0]):
         for y in range(s[1]):
-            #print m[x,y]
-	    if 'a' in channels:
-            	r,g,b,a = m[(x,y)]
-	    else:
+            if 'a' in channels:
+                r,g,b,a = m[(x,y)]
+            else:
                 r,g,b=m[(x,y)]
-		a=255
+                a=255
             r1 = 0
             g1 = 0
             b1 = 0
             a1 = 255
             if ( 'r' in channels and all( [ (r&(0x01<<i))>>i==1 for i in bitnum]) ):
-                 r1= 255
+                r1= 255
             else:
-                 r1=0
+                r1=0
             if ( 'g' in channels and all( [ (g&(0x01<<i))>>i==1 for i in bitnum]) ):
-                 g1=255
+                g1=255
             else:
-                 g1=0
+                g1=0
             if ( 'b' in channels and all( [ (b&(0x01<<i))>>i==1 for i in bitnum]) ):
-                 b1=255
+                b1=255
             else:
-                 b1=0
+                b1=0
             if ( 'a' in channels and all( [ (a&(0x01<<i))>>i==1 for i in bitnum]) ):
-                 a1=255
+                a1=255
             else:
-                 if ( 'a' in channels):
-                      a1=0
-	    if 'a' in channels:
-                 m[(x,y)] = r1,g1,b1,a1
+                if ( 'a' in channels):
+                    a1=0
+            if 'a' in channels:
+                m[(x,y)] = r1,g1,b1,a1
             else:
-		 m[(x,y)]=r1,g1,b1
+                m[(x,y)]=r1,g1,b1
 
     print 'Writing output to file: %s' %(outim)
     
     if 'a' in channels:
     	n.save(outim,'PNG')
     else:
-	n.save(outim,'BMP')
+        n.save(outim,'BMP')

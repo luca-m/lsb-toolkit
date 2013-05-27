@@ -29,144 +29,11 @@ VERSION
 
     0.2
 """
-import numpy as np
-import Image, sys, re, inspect, stego_algs
+import Image
+import sys
+import re
+import inspect
 from optparse import OptionParser
-
-'''
-class Embedder:
-    """
-    | rgb | rgb | rgb | rgb | rgb | rgb | rgb | rgb | rgb | 
-    | 765   432   10- | 765   432   10- | 765   432   10END |
-    """
-    @classmethod
-    def classic_lsb (self, image , filetoembed ,channels = 'rgb' , bits = [0], vertical = False):
-        m = image.load()
-        s = image.size 
-        index=0
-        bindex=7
-        bitnum = bits[0]%7
-        char = filetoembed.read(1) 
-        if char == '': 
-            return image
-        F = s[0]
-        S = s[1]
-        if vertical == True:
-            F = s[1]
-            S = s[0]
-        for x in range(F):
-            for y in range(S):
-                if vertical == True:
-                    r,g,b,a = m[(y,x)]
-                else:
-                    r,g,b,a = m[(x,y)]
-                if bindex > 1 :
-                    r = ( r & (0xfe << bitnum ) ) | ( ((ord(char) & (0x01 << bindex)) >> bindex)<< bitnum )
-                    bindex-=1
-                    g = ( g & (0xfe << bitnum ) ) | ( ((ord(char) & (0x01 << bindex)) >> bindex)<< bitnum )
-                    bindex-=1
-                    b = ( b & (0xfe << bitnum ) ) | ( ((ord(char) & (0x01 << bindex)) >> bindex)<< bitnum )
-                    bindex-=1
-                elif bindex == 1 : 
-                    r = ( r & (0xfe << bitnum ) ) | ( ((ord(char) & (0x01 << bindex)) >> bindex)<< bitnum )
-                    bindex-=1
-                    g = ( g & (0xfe << bitnum ) ) | ( ((ord(char) & (0x01 << bindex)) >> bindex)<< bitnum )
-                    b = ( b & (0xfe << bitnum ) ) | 0x00 
-                    bindex=7
-                    char = filetoembed.read(1) 
-                    if char == '': 
-                        b = ( b & (0xfe << bitnum ) ) | 0xff    # mark the end of embeddings
-                        if vertical == True:
-                            m[(y,x)] = r,g,b,a
-                        else:
-                            m[(x,y)] = r,g,b,a
-                        return image
-                if vertical == True:
-                    m[(y,x)] = r,g,b,a
-                else:
-                    m[(x,y)] = r,g,b,a
-        return image
-    """
-    """
-    @classmethod
-    def raw_lsb_fast (self, image, filetoembed ,channels = 'rgb' , bits = [0] , vertical = False):
-        
-        m = image.load()
-        s = image.size
-        index=0
-        bindex=7
-        char = filetoembed.read(1) 
-        if char == '': 
-            return image
-        F = s[0]
-        S = s[1]
-        if vertical == True:
-            F = s[1] # y
-            S = s[0] # x
-        for x in range(F):
-            for y in range(S):
-                if vertical == True:
-                    r,g,b,a = m[(y,x)]
-                else:
-                    r,g,b,a = m[(x,y)]
-                for bit in bits:
-                    bitnum = bit % 7
-                    for chan in channels:
-                        if 'r' == chan :
-                            r = ( r & (0xfe << bitnum ) ) | ( ((ord(char) & (0x01 << bindex)) >> bindex)<< bitnum )
-                            bindex-=1
-                            if (bindex < 0 ):
-                                bindex=7
-                                char = filetoembed.read(1) 
-                                if char == '': 
-                                    if vertical == True:
-                                        m[(y,x)] = r,g,b,a
-                                    else:
-                                        m[(x,y)] = r,g,b,a
-                                    return image
-                        if 'g' == chan :
-                            g = ( g & (0xfe << bitnum ) ) | ( ((ord(char) & (0x01 << bindex)) >> bindex)<< bitnum )
-                            bindex-=1
-                            if (bindex < 0 ):
-                                bindex=7
-                                char = filetoembed.read(1) 
-                                if char == '': 
-                                    if vertical == True:
-                                        m[(y,x)] = r,g,b,a
-                                    else:
-                                        m[(x,y)] = r,g,b,a
-                                    return image
-                        if 'b' == chan :
-                            b = ( b & (0xfe << bitnum ) ) | ( ((ord(char) & (0x01 << bindex)) >> bindex)<< bitnum )
-                            bindex-=1
-                            if (bindex < 0 ):
-                                bindex=7
-                                char = filetoembed.read(1) 
-                                if char == '': 
-                                    if vertical == True:
-                                        m[(y,x)] = r,g,b,a
-                                    else:
-                                        m[(x,y)] = r,g,b,a
-                                    return image
-                        if 'a' == chan :
-                            a = ( a & (0xfe << bitnum ) ) | ( ((ord(char) & (0x01 << bindex)) >> bindex)<< bitnum )
-                            bindex-=1
-                            if (bindex < 0 ):
-                                bindex=7
-                                char = filetoembed.read(1) 
-                                if char == '': 
-                                    if vertical == True:
-                                        m[(y,x)] = r,g,b,a
-                                    else:
-                                        m[(x,y)] = r,g,b,a
-                                    return image
-                if vertical == True:
-                    m[(y,x)] = r,g,b,a
-                else:
-                    m[(x,y)] = r,g,b,a
-
-        return image
-'''
 
 #-------------------------------------------------------------------------------
 # MAIN 
@@ -227,14 +94,11 @@ if __name__ == "__main__":
     n = n.convert("RGBA")
     s = n.size
 
-    #print 'Image size: '+str(s)
-
     embedder = sys.modules['stego_algs'].__dict__.get(algorithm)(n,channels,bitnum,options.vertical)
-    #n = getattr(embedder, algorithm )(n ,sys.stdin , channels , bitnum ,options.vertical)
+
     n = embedder.write(sys.stdin,subimage[0],subimage[1],subimage[2],subimage[3])
 
-    print 'Saving file to '+outim+'..'
+    print 'Saving file to '+outim
+
     n.save(outim, "PNG")
-
-
 

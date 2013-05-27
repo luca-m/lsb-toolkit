@@ -30,29 +30,30 @@ VERSION
     0.3
 """
 
-import sys,re
+import sys
+from bitstring import bits
+from bitstring import Distance
 from collections import deque
 from optparse import OptionParser
 
-class Distance:
-    """
-    | rgb | rgb | rgb | rgb | rgb | rgb | rgb | rgb | rgb | 
-    | 765   432   10- | 765   432   10- | 765   432   10END |
-    """
-    @classmethod
-    def hamming (self, bitsr1 , bitsr2 ):
-        length = min(len(bitsr1),len(bitsr2))
-        diff = 0
-        for i in range(length):
-            if bitsr1[i] != bitsr2[i]:
-                diff+=1
-        return 1.0-diff / float(length)
+def calcAutocorrs(infile,dst,num,shft):
+    """ Calculate autocorrelations """
+    distance=Distance()
+    d=deque()
+    autocorr=list()
+    char = infile.read(1) 
+    while char != '': 
+        [ d.append(x) for x in bits(ord(char)) ]
+        char = infile.read(1) 
+    original = ''.join( x for x in d )
 
-def bits(char):
-    s=''
-    for i in range(8):
-        s = str( (char>>i) & 0x01 ) + s
-    return s
+    for i in range(1,num+1):
+        d.rotate(shft)
+        shifted = ''.join(x for x in d)
+        corr = getattr(distance, dst )( original , shifted )
+        autocorr.append((i*shft , corr))
+    return autocorr
+
 #-------------------------------------------------------------------------------
 # MAIN 
 #-------------------------------------------------------------------------------
@@ -74,20 +75,7 @@ if __name__ == "__main__":
     num = abs(options.num)
     shft = abs(options.shift)
 
-    distance = Distance()
-    d = deque( )
-
-    char = sys.stdin.read(1) 
-    while char != '': 
-        [ d.append(x) for x in bits(ord(char)) ]
-        char = sys.stdin.read(1) 
-
-    original = ''.join( x for x in d )
-    for i in range(1,num+1):
-        d.rotate(shft)
-        shifted = ''.join(x for x in d)
-        corr = getattr(distance, dst )( original , shifted )
-        print " Shift %d Corr %f" % ( i*shft , corr )
-
-
+    autocorr=calcAutocorrs(sys.stdin,dst,num,shft)
+    for (shift,corr) in autocorr:
+        print " Shift %d Corr %f" % ( shift , corr )
 

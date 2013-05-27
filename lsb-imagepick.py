@@ -30,9 +30,43 @@ VERSION
     0.4
 """
 
-import numpy as np
-import Image, sys, re
+import Image
+import re
 from optparse import OptionParser
+
+
+def impick(n,channels,period,vert):
+    """ Pick image pixel periodically """
+    n = n.convert('RGBA')
+    nn = Image.new( n.mode, n.size, "black")
+    m = n.load()
+    s = n.size
+    #nn = nn.convert('RGBA')
+    mm = nn.load()
+    if vert:
+        xmax=s[1]
+        ymax=s[0]
+    else:
+        xmax=s[0]
+        ymax=s[1]
+
+    xmin=0
+    step=1
+    for x in range(xmin,xmax,step):
+        for y in range(ymax):
+            r,g,b,a = m[(x,y)]
+            r1,g1,b1,a1 = 0,0,0,255
+            if (y % period == 0):
+                if 'r' in channels :
+                     r1=r
+                if 'g' in channels :
+                     g1=g
+                if 'b' in channels :
+                     b1=b
+                if 'a' in channels :
+                     a1=a
+            mm[(x,y)]=r1,g1,b1,a1
+    return nn
 #-------------------------------------------------------------------------------
 # MAIN 
 #-------------------------------------------------------------------------------
@@ -65,44 +99,11 @@ if __name__ == "__main__":
     period= options.period
 
     outim=inputim+"-pick"+str(period)+"-"+channels+".png"
+    
     n = Image.open(inputim)
-    n = n.convert('RGBA')
-    m = n.load()
-    s = n.size
 
-    nn = Image.new( n.mode, n.size, "black")
-    nn = nn.convert('RGBA')
-    mm = nn.load()
+    nn=impick(n,channels,period,vert)
 
-    #print 'Image size: '+str(s)
-    #print 'Processing..'
-
-    if vert:
-        xmax=s[1]
-        ymax=s[0]
-    else:
-        xmax=s[0]
-        ymax=s[1]
-
-        xmin=0
-        step=1
-
-    for x in range(xmin,xmax,step):
-        for y in range(ymax):
-            #print m[x,y]
-            r,g,b,a = m[(x,y)]
-            r1,g1,b1,a1 = 0,0,0,255
-            if (y % period == 0):
-                if ( 'r' in channels ):
-                     r1=r
-                if ( 'g' in channels ):
-                     g1=g
-                if ( 'b' in channels ):
-                     b1=b
-                if ( 'a' in channels ):
-                     a1=a
-            #print (x,xs)
-            mm[(x,y)]=r1,g1,b1,a1
     print 'Writing output to file: %s' %(outim)
     nn.save(outim, "PNG")
 
