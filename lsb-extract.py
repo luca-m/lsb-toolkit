@@ -33,14 +33,14 @@ import Image
 import re
 import inspect
 import sys 
+import stego_algs
 from optparse import OptionParser
 
 #-------------------------------------------------------------------------------
 # MAIN 
 #-------------------------------------------------------------------------------
 if __name__ == "__main__":
-    #algs = [ y for y in dir(Extractor)if callable(getattr(Extractor,y))]
-    algs=[k for (k,v) in sys.modules['stego_algs'].__dict__.items() if inspect.isclass(v) and k != 'Algorithm']
+    algs=[k for (k,v) in stego_algs.__dict__.items() if inspect.isclass(v) and k != 'Algorithm']
 
     parser = OptionParser("usage: %prog [OPTIONS] ARGS ")
 
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     n = n.convert("RGBA")
     s = n.size
 
-    extractor = sys.modules['stego_algs'].__dict__.get(algorithm)(n,channels,bitnum,options.vertical)
+    extractor = stego_algs.__dict__.get(algorithm)(n,channels,bitnum,options.vertical)
     by = extractor.read(subimage[0],subimage[1],subimage[2],subimage[3])
 
     if len(by) > 0 :

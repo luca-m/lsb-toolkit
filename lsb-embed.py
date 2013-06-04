@@ -33,13 +33,14 @@ import Image
 import sys
 import re
 import inspect
+import stego_algs
 from optparse import OptionParser
 
 #-------------------------------------------------------------------------------
 # MAIN 
 #-------------------------------------------------------------------------------
 if __name__ == "__main__":
-    algs=[k for (k,v) in sys.modules['stego_algs'].__dict__.items() if inspect.isclass(v) and k != 'Algorithm']
+    algs=[k for (k,v) in stego_algs.__dict__.items() if inspect.isclass(v) and k != 'Algorithm']
 
     parser = OptionParser("usage: %prog [OPTIONS] ARGS \nData to embed will be picked from STDIN")
 
@@ -94,7 +95,7 @@ if __name__ == "__main__":
     n = n.convert("RGBA")
     s = n.size
 
-    embedder = sys.modules['stego_algs'].__dict__.get(algorithm)(n,channels,bitnum,options.vertical)
+    embedder = stego_algs.__dict__.get(algorithm)(n,channels,bitnum,options.vertical)
 
     n = embedder.write(sys.stdin,subimage[0],subimage[1],subimage[2],subimage[3])
 
