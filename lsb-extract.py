@@ -53,7 +53,7 @@ if __name__ == "__main__":
     parser.add_option("-b", "--bitnum",dest="bitnum", action="store", type="string",
                       default='0',help="bit to consider in pixel\'s channels [0-7]{1,8}", metavar="BITNUM")
     parser.add_option("-a", "--algorithm",dest="algorithm", action="store", type="string",
-                      default=algs[1],help="extraction algorithm to use "+str(algs), metavar="ALGORITHM")
+                      default=algs[0],help="extraction algorithm to use "+str(algs)+" (Default:"+algs[0]+")", metavar="ALGORITHM")
     parser.add_option("-v", "--vertical",dest="vertical", action="store_true", default=False,help="Extract per column instead of per row ", metavar="VERTICAL")
     parser.add_option("-r", "--rectangle",dest="rectangle", action="store",type="string",default="0,0,max,max",help="define a sub-image area where to extract data", metavar="RECTANGLE")
 
@@ -101,10 +101,10 @@ if __name__ == "__main__":
 
     if len(by) > 0 :
         if outfile is None:
-            of = sys.stdout
+            by.tofile(sys.stdout)
         else:
             print 'Writing output to file: %s' %outfile
-            with  open(outfile,"wb") as of:
+            with open(outfile,"wb") as of:
                 by.tofile(of)
     else:
         print 'No data extracted.'
