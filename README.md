@@ -11,7 +11,7 @@ This is a small and simple toolkit that might be useful during steganalysis, it 
 --------------------------------------------------------------------------------
 
 ###### lsb-enancher
-  Produce a picture from input image that enhance bit variations. 
+  	Produce a picture from input image that enhance bit variations. 
 	This particular picture might reveal suspicious patterns inside the analyzed image.
 
 ###### lsb-extract
@@ -44,9 +44,8 @@ This is a small and simple toolkit that might be useful during steganalysis, it 
 	lsb-extract's dual tool.
 	Embed data from STDINPUT into a picture using the same algorithms
 
-###### lsb-entropy-b
-	Calculate the entropy of a bit string as percentual of 1s, supposedly 
-	extracted from an image.
+###### lsb-randomness-b
+	Calculate the randomness of a bit string.
 
 ###### lsb-autocorr-b
 	Calculate theautocorrelation of a bit string measuring how much the shifted
@@ -63,7 +62,15 @@ This is a small and simple toolkit that might be useful during steganalysis, it 
 	Utiliy that produce a pixel stream in output, in other world it 
 	print out the integer values of the image pixels.
 	Typical usage: /lsb-echo-pixels -f image.png | ./lsb-chisquare
-
+	
+###### lsb-image-create
+	Create pictures from a pixel stream. It could be useful for visualizing raw files 
+	in order to observe the presence of regular patterns, or also for recreate image 
+	from an extracted pixel stream (eg. with lsb-echo-pixels)
+	
+###### lsb-imageop
+	Utility for performing pixel per pixel operation on a couple of images.
+	Can be really useful if user has access to the original steganography carrier. 
 
 #### USAGE:
 -----------------------------------------------------------------------------
