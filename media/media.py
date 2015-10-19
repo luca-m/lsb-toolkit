@@ -7,11 +7,8 @@
 # Distributed under terms of the MIT license.
 
 """
-
 sudo apt-get install libgdal-dev libgdal1h
 """
-#from scipy import misc.imread as imread
-#from scipy import misc.imsave as imsave
 import numpy as np
 import rasterio
 
@@ -64,7 +61,7 @@ class Media(object):
 class ImageMedia(Media):
   ''' '''
   def __init__(self,filepath=None, matrix=None):
-    super(Media,self).__init__()
+    super(ImageMedia,self).__init__()
     if filepath is not None:
       self.loadFromFile(filepath)
     elif matrix is not None:
