@@ -9,18 +9,15 @@
 """
 
 """
-from media.media import Media
+from media import Media
 from StringIO import StringIO
-import re
-from bitstring import BitString, BitStream
-from bitarray import bitarray
 from math import floor
-from itertools import product
-from collections import Iterable
+from bitstring import BitString,BitStream
+from array import array
+from re import match
 
 class AEncoder(object):
   ''' Abstract Encoder, do not use. Should only provide an useful base for specific encoders '''
-
   def __init__(self, media, direction=None):
     if media is None:
       raise Exception("Cannot create the encoder with None media")
@@ -30,7 +27,7 @@ class AEncoder(object):
     elif len(media.dim) == len(direction) and all(map(lambda x: x<len(media.dim) and x>=0,direction)):
       self.direction=direction
     else:
-      raise Exception("Direction specified in the encoder sucks. double check it ({})".format(direction))
+      raise Exception("Direction specified in the encoder sucks. double check it ("+direction"+)")
 
   def decodeStream(self):
     return StringIO(self.decode()) 
@@ -41,18 +38,18 @@ class AEncoder(object):
   def decodeRect(self, p1, p2):
     if len(self.media.dim)!=len(p1) or len(p1)!=len(p2):
       raise Exception("Dimension of the specified coordinates does not match dimensions of the space of the media")
-    if not all(map(lambda x,y: x<y, p1,self.media.dim)) or not all(map(lambda x: x>=0,p1)) or \
-       not all(map(lambda x,y: x<y, p2,self.media.dim)) or not all(map(lambda x: x>=0,p2)):
-      raise Exception("Coordinates out of the media space range {}-{}x{}".format(p1,p2,self.media.dim))
+    if all(map(lambda x,y: x<y, p1,self.media.dim)) and all(map(lambda x: x>=0,p1)) and \
+       all(map(lambda x,y: x<y, p2,self.media.dim)) and all(map(lambda x: x>=0,p2)):
+      raise Exception("Coordinates out of the media space range")
     self.reset()
-    #bits=BitString()
-    bits=bitarray()
+    bits=BitString()
     for c_val in self.iterateValues(p1,p2,self.direction):
        try:
-         self.decodeValue(c_val, bitbuffer=bits)
+         bbb=self.decodeValue(c_val, payload), c_val[:-1])
+         bits.append(bbb)
        except Exception,e:
          # TODO: log exception
-         raise e
+         pass
     return bits.tobytes()
 
   def availableSpace(self):
@@ -73,9 +70,9 @@ class AEncoder(object):
   def encodeRect(self, data, p1, p2):
     if len(self.media.dim)!=len(p1) or len(p1)!=len(p2):
       raise Exception("Dimension of the specified coordinates does not match dimensions of the space of the media")
-    if not all(map(lambda x,y: x<y, p1,self.media.dim)) or not all(map(lambda x: x>=0,p1)) or \
-       not all(map(lambda x,y: x<y, p2,self.media.dim)) or not all(map(lambda x: x>=0,p2)):
-      raise Exception("Coordinates out of the media space range {}-{}x{}".format(p1,p2,self.media.dim))
+    if all(map(lambda x,y: x<y, p1,self.media.dim)) and all(map(lambda x: x>=0,p1)) and \
+       all(map(lambda x,y: x<y, p2,self.media.dim)) and all(map(lambda x: x>=0,p2)):
+      raise Exception("Coordinates out of the media space range")
     self.reset()
     bits=BitStream(bytes=data)
     for c_val in self.iterateValues(p1,p2,self.direction):
@@ -84,13 +81,13 @@ class AEncoder(object):
         self.media.set(vvv, c_val[:-1])
       except Exception,e:
         # TODO: log exception
-        raise e
+        pass
       
-  def decodeValue(self, coords_and_chunk, bitbuffer=BitString()):
+  def decodeValue(self, coords_and_chunk **params):
     ''' Must return a BitString '''
     raise Exception('please do not use AEncoder.decodeValue, A is for Abstract..')
     return BitString(coords_and_chunk[:-1])
-  def encodeValue(self, coords_and_chunk, valuebitstream):
+  def encodeValue(self, coords_and_chunk, valuebitstream, **params):
     ''' Must return the new value for the specified coordinates '''
     raise Exception('please do not use AEncoder.encodeValue, A is for Abstract..')
     return coords_and_chunk[:-1]
@@ -102,58 +99,56 @@ class AEncoder(object):
 
 
 class AEncoderChannels(AEncoder):
-  ''' Channels encoder '''
-  def __init__(self, media, direction=None, channels='rgb', bits=[0], channelmap={'r':0,'g':1,'b':2,'a':3}):
-    super(AEncoderChannels,self).__init__(media, direction=direction)
-    if not all(map(lambda x:x>=0, channelmap.values())) or len(set(channelmap.values())) != len(channelmap.values()):
-      raise Exception("invalid channel map specification '{}'".format(str(channelmap)))
+  ''' 8bit channels encoder '''
+  def __init__(self,media, direction=None, channels='rgb', bits=[0], channelmap={'r':0,'g':1,'b':2,'a':3}):
+    super(AEncoderLinear,self).__init__(media,direction)
+    if not all(map(lambda x:x>=0, channelmap.values()) or len(set(channelmap.values())) != len(channels.values()):
+      raise Exception("invalid channel map specification '"+str(channelmap)+"'")
     self.channelmap=channelmap
     if not re.match("^({})+$".format('|'.join(channelmap.keys())),channels) or len(set(channels))!=len(channels):
-      raise Exception("invalid channel specification '{}'. Current channel mapping: {}".format(channels,str(channelmap)))
+    raise Exception("invalid channel specification '"+str(channels)+"'. Current channel mapping: "+str(channelmap))
     self.channels=channels
     self._channels=map(lambda x: x[1],[(c,channelmap.get(c)) for c in self.channels])
-    if not all(map(lambda x:x>=0 and x<self.media.channel_bitness, bits)) or len(set(bits)) != len(bits):
-      raise Exception("invalid bit position specification '{}'".format(bits))
+    if not all(map(lambda x:x>=0 and x<self.media.channel_bitness, bits) or len(set(bits)) != len(bits):
+      raise Exception("invalid bit position specification'"+str(bits)+"'")
     self.bits=bits
   
   def availableSpace(self):
     return int(floor(reduce(lambda x,y: x*y, self.media.dim)*len(self.bits)*len(self.channels)/8.0))
 
-
 class AEncoderLinear(AEncoderChannels):
   ''' Basic encoder operates on a linear subset of media values (eg. a rectangle)'''
-  def __init__(self, media, direction=None, channels='rgb', bits=[0], channelmap={'r':0,'g':1,'b':2,'a':3}):
-    super(AEncoderLinear,self).__init__(media, direction=direction, channels=channels, bits=bits, channelmap=channelmap)
+  def __init__(self,media,direction=()):
+    super(AEncoder,self).__init__(media, direction)
 
   def iterateValues(self, p1, p2, direction):
     dims_and_start=zip(xrange(len(p1)), p1)  # [ (index,minvalue),]
     dims_and_end  =zip(xrange(len(p1)), p2)  # [ (index,maxvalue),]
     # sort coordinates by direction
-    dim_to_iter_start=reversed(reduce(lambda x,y:x+y,[ [dd for dd in dims_and_start if dd[0]==j] for j in direction] ) )
-    dim_to_iter_end  =reversed(reduce(lambda x,y:x+y,[ [dd for dd in dims_and_end   if dd[0]==j] for j in direction] ) )
-    coords=map(lambda a,b: tuple(list(a)+[b[1]]),dim_to_iter_start,dim_to_iter_end)
-    tmpdata = self.media.toNumpy()
-    c=[0]*len(coords)
-    def rec(start_end,crds):
-      if crds is None:
-        crds=[0]*len(direction)
-      idx,st,end = start_end[0]
-      for i in xrange(st,end):
-        crds[idx]=i
-        if len(start_end)==1: # last
-          val = tmpdata[tuple(crds)] 
-          yield tuple(crds+[val])
-        else:
-          for cor in rec(start_end[1:],crds):
-            yield cor
-    return rec(coords,None)
+    dim_to_iter_start=reduce(lambda x,y:x+y,[ [dd for dd in dims_and_start if dd[0]==j] for j in direction] ) 
+    dim_to_iter_end  =reduce(lambda x,y:x+y,[ [dd for dd in dims_and_end   if dd[0]==j] for j in direction] ) 
+    # iterate media values usinc coordinates sorted by specified direction.
+    # TODO: support decreasing coords
+    def recourse(dims_start, dims_end, indexes):
+      if len(dims_start)==0 and len(dims_end)==0:
+        tmp = map(lambda x: x[1], sorted(indexes))
+        yield tuple(tmp + [ self.media.toNumpy()[tuple(tmp)] ])
+      else:
+        for i in xrange(dims_start[0][1],dims_end[0][1]):
+          indexes.append((dims_start[0][0],i))
+          recourse(dims_start[1:], dims_end[1:], indexes)
+
+    for coord in recourse(dim_to_iter,[]):
+      yield coord
+
+
 
 
 #
 # Actual Encoders
 #
 
-class EncoderLSBStopbit(AEncoderLinear):
+class EncoderLSBStopbit(AEncoderChannels):
   ''' 
         Classic stopbit LSB: stego on bit 0 of the rgb channel with END bit in blue channel  
         | rgb | rgb | rgb | rgb | rgb | rgb | rgb | rgb | rgb | 
@@ -161,7 +156,7 @@ class EncoderLSBStopbit(AEncoderLinear):
 
   '''
   def __init__(self,media, channels='rgb', bits=[0], channelmap={'r':0,'g':1,'b':2}):
-    super(EncoderLSBStopbit,self).__init__(media, direction=None, channels=channels, bits=bits, channelmap=channelmap)
+    super(AEncoderChannels,self).__init__(media, direction=None, channels=channels, bits=bits, channelmap=channelmap)
 
   def reset(self):
     self._iterbindex=7 # lsb
@@ -169,22 +164,20 @@ class EncoderLSBStopbit(AEncoderLinear):
     self._checkend=2
     self._end=False
 
-  def decodeValue(self, coords_and_chunk, bitbuffer=BitString()):
+  def decodeValue(self, coords_and_chunk **params):
     coords = coords_and_chunk[:-1]
     value  = coords_and_chunk[-1]
     mask   = 0x01
-    payload=bitbuffer
+    payload=BitString()
     last_chan=self._channels[-1]
     chans=self._channels[:-1]
     if not self._end:
       # | rgb | rgb | rgb | rgb | rgb | rgb | rgb | rgb | rgb | 
       # | 765   432   10- | 765   432   10- | 765   432   10E |
       for i in chans:
-        #payload.append(BitString(bool=(value[i] & mask)))
-        payload.append(value[i] & mask)
-      #lastbit=BitString(bool=(value[last_chan] & mask))
-      lastbit=value[last_chan] & mask
-      if self._checkend==0 and lastbit.bool:
+        payload.append(BitString(bool=(value[i] & mask))
+      lastbit = BitString(bool=(value[last_chan] & mask))
+      if self._checkend==0 and bluebit.bool:
         self._end=True
       else:
         self._checkend=3
@@ -192,12 +185,13 @@ class EncoderLSBStopbit(AEncoderLinear):
       self._checkend-=1
     return payload
 
-  def encodeValue(self, coords_and_chunk, valuebitstream):
+  def encodeValue(self, coords_and_chunk, valuebitstream, **params):
     coords = coords_and_chunk[:-1]
-    value  = coords_and_chunk[-1]
+    value  = coords_and_chunk[:-1]
     mask   = 0x01 << (self._iterbitnum%7)
     last_chan=self._channels[-1]
     chans  = self._channels[:-1]
+    payload=BitString()
     if self._end:
       return value
     new_value = [x for x in value]
@@ -222,7 +216,7 @@ class EncoderLSBStopbit(AEncoderLinear):
     return new_value
 
 
-class EncoderLSB(AEncoderLinear):
+class EncoderLSB (ARGBEncoder):
   '''
       Raw Lsb algorithm.
       | rgba | rgba | rgba | rgba | ...
@@ -234,24 +228,23 @@ class EncoderLSB(AEncoderLinear):
       | r | r | r | r ...
       | 7   6   5   4 ...
   '''
-  def __init__(self, media, direction=None, channels='rgb', bits=[0], channelmap={'r':0,'g':1,'b':2}):
-    super(EncoderLSB,self).__init__(media, direction=direction, channels=channels, bits=bits, channelmap=channelmap)
+  def __init__(self, media, direction=None, channels='rgb', bits=[0]):
+    super(EncoderARGB,self).__init__(media,direction=direction,channels=channels, bits=bits)
 
-  def decodeValue(self, coords_and_chunk, bitbuffer=BitString()):
+  def decodeValue(self, coords_and_chunk **params):
     coords = coords_and_chunk[:-1]
-    value  = coords_and_chunk[-1]
-    payload=bitbuffer
+    value  = coords_and_chunk[:-1]
+    payload=BitString()
     for chan in self._channels:
       for bit in self.bits:
         mask = 0x01 << bit
-        #payload.append(BitString(bool=(value[chan] & mask) ))
-        payload.append(value[chan] & mask)
+        payload.append(BitString(bool=(value[chan] & mask) )
     return payload
 
-  def encodeValue(self, coords_and_chunk, valuebitstream):
+  def encodeValue(self, coords_and_chunk, valuebitstream, **params):
     coords = coords_and_chunk[:-1]
-    value  = coords_and_chunk[-1]
-    new_value = [x for x in value]
+    value  = coords_and_chunk[:-1]
+    new_value = [x for x value]
     for chan in self._channels:
       for bit in self.bits:
         if valuebitstream.pos < valuebitstream.len:
