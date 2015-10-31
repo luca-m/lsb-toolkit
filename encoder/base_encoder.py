@@ -48,11 +48,7 @@ class AEncoder(object):
     #bits=BitString()
     bits=bitarray()
     for c_val in self.iterateValues(p1,p2,self.direction):
-       try:
-         self.decodeValue(c_val, bitbuffer=bits)
-       except Exception,e:
-         # TODO: log exception
-         raise e
+      self.decodeValue(c_val, bitbuffer=bits)
     return bits.tobytes()
 
   def availableSpace(self):
@@ -79,12 +75,8 @@ class AEncoder(object):
     self.reset()
     bits=BitStream(bytes=data)
     for c_val in self.iterateValues(p1,p2,self.direction):
-      try:
-        vvv=self.encodeValue(c_val, bits)
-        self.media.set(vvv, c_val[:-1])
-      except Exception,e:
-        # TODO: log exception
-        raise e
+      vvv=self.encodeValue(c_val, bits)
+      self.media.set(vvv, c_val[:-1])
       
   def decodeValue(self, coords_and_chunk, bitbuffer=BitString()):
     ''' Must return a BitString '''
@@ -164,8 +156,6 @@ class EncoderLSBStopbit(AEncoderLinear):
     super(EncoderLSBStopbit,self).__init__(media, direction=None, channels=channels, bits=bits, channelmap=channelmap)
 
   def reset(self):
-    self._iterbindex=7 # lsb
-    self._iterbitnum=0
     self._checkend=2
     self._end=False
 
@@ -180,22 +170,23 @@ class EncoderLSBStopbit(AEncoderLinear):
       # | rgb | rgb | rgb | rgb | rgb | rgb | rgb | rgb | rgb | 
       # | 765   432   10- | 765   432   10- | 765   432   10E |
       for i in chans:
-        #payload.append(BitString(bool=(value[i] & mask)))
         payload.append(value[i] & mask)
-      #lastbit=BitString(bool=(value[last_chan] & mask))
-      lastbit=value[last_chan] & mask
-      if self._checkend==0 and lastbit.bool:
-        self._end=True
-      else:
-        self._checkend=3
+      lastbit=int(value[last_chan] & mask)
+      if self._checkend>0:
+        self._checkend-=1
         payload.append(lastbit)
-      self._checkend-=1
+      elif self._checkend==0 and lastbit==1:
+        self._end=True
+      elif self._checkend==0 and lastbit==0:
+        self._checkend=2
+      else:
+        raise Exception('what are u doing here with _checkend<0 ?')
     return payload
 
   def encodeValue(self, coords_and_chunk, valuebitstream):
     coords = coords_and_chunk[:-1]
     value  = coords_and_chunk[-1]
-    mask   = 0x01 << (self._iterbitnum%7)
+    mask   = 0x01
     last_chan=self._channels[-1]
     chans  = self._channels[:-1]
     if self._end:
@@ -206,18 +197,20 @@ class EncoderLSBStopbit(AEncoderLinear):
       # | 765   432   10- | 765   432   10- | 765   432   10E |
       for i in chans: 
         if valuebitstream.pos < valuebitstream.len:
-          val = valuebitstream.read(1)
-          new_value[i] = value[i]&(0xfe<<0) | ((val.int&0x01)<<0) 
+          val = valuebitstream.read(1).uint
+          new_value[i] = value[i]&(0xfe<<0) | ((val&0x01)<<0) 
       if self._checkend>0:
         self._checkend-=1
         if valuebitstream.pos < valuebitstream.len:
-          val = valuebitstream.read(1)
-          new_value[last_chan] = value[last_chan]&(0xfe<<0) | ((val.int&0x01)<<0)
+          val = valuebitstream.read(1).uint
+          new_value[last_chan] = value[last_chan]&(0xfe<<0) | ((val&0x01)<<0)
       else:
         if not valuebitstream.pos < valuebitstream.len:
           # END BIT
-          new_value[last_chan] = value[last_chan]&(0xfe<<0) | ((val.int&0x01)<<0)
+          new_value[last_chan] = value[last_chan]&(0xfe<<0) | ((val&0x01)<<0)
           self._end=True
+        else:
+          new_value[last_chan] = value[last_chan]&(0xfe<<0) | ((0x0&0x01)<<0)
         self._checkend=2
     return new_value
 
@@ -244,7 +237,6 @@ class EncoderLSB(AEncoderLinear):
     for chan in self._channels:
       for bit in self.bits:
         mask = 0x01 << bit
-        #payload.append(BitString(bool=(value[chan] & mask) ))
         payload.append(value[chan] & mask)
     return payload
 
@@ -255,10 +247,10 @@ class EncoderLSB(AEncoderLinear):
     for chan in self._channels:
       for bit in self.bits:
         if valuebitstream.pos < valuebitstream.len:
-          val = valuebitstream.read(1)
+          val = valuebitstream.read(1).uint
         else:
           return new_value
         mask = 0x01 << bit
-        new_value[chan] = value[chan] & (0xfd << bit) | (val & mask)
+        new_value[chan] = value[chan] & (0xfe << bit) | (val & mask)
     return new_value
 

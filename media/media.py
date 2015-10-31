@@ -33,7 +33,7 @@ class Media(object):
     self.channel_bitness=8
   def __iter__(self):
     pass
-  def get(self, *coords):
+  def get(self, coords):
     if len(coords)!=len(self.dim):
       raise Exception("Dimension of the specified coordinates does not match dimensions of the space of the media")
     pass
@@ -43,7 +43,7 @@ class Media(object):
     if len(p1)!=len(self.dim) or len(p1)!=len(p2):
       raise Exception("Dimension of the specified coordinates does not match dimensions of the space of the media")
     pass
-  def set(self, value, *coords):
+  def set(self, value, coords):
     if len(coords)!=len(self.dim):
       raise Exception("Dimension of the specified coordinates does not match dimensions of the space of the media")
     pass
@@ -107,15 +107,15 @@ class ImageMedia(Media):
            'nodata': 0}
     with rasterio.open(path,'w',**self._profile) as dst:
       dst.write(tmpnewdata)
-  def get(self, *coords):
+  def get(self, coords):
     ''' '''
-    super(ImageMedia,self).get(*coords)
+    super(ImageMedia,self).get(coords)
     return self.data[coords]
   def getRect(self, p1, p2):
     super(ImageMedia,self).getRect(p1,p2)
     return self.data[p1[0]:p1[1]:1,p2[0]:p2[1]:1]
-  def set(self, value, *coords):
-    super(ImageMedia,self).set(value,*coords)
+  def set(self, value, coords):
+    super(ImageMedia,self).set(value, coords)
     self.data[coords] = value
 
 
