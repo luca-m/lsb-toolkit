@@ -29,7 +29,7 @@ VERSION
 
     0.3
 """
-import Image
+from PIL import Image
 import sys
 import re
 from optparse import OptionParser

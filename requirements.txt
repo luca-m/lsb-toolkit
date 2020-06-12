@@ -1,0 +1,4 @@
+pillow
+bitstring
+numpy
+scip

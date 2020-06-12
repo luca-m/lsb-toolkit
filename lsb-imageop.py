@@ -30,7 +30,7 @@ VERSION
     0.4
 """
 
-import Image
+from PIL import Image
 import re
 from optparse import OptionParser
 

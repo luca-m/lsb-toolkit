@@ -10,6 +10,9 @@ This is a small and simple toolkit that might be useful during steganalysis, it 
 ##### STEGANALYSIS TOOLS
 --------------------------------------------------------------------------------
 
+Install: `pip2 install -r requirements.txt`
+
+
 ###### lsb-enancher
   	Produce a picture from input image that enhance bit variations. 
 	This particular picture might reveal suspicious patterns inside the analyzed image.

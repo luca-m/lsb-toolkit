@@ -31,7 +31,8 @@ VERSION
 """
 
 import numpy as np
-import Image, sys, re
+from PIL import Image
+import sys, re
 from optparse import OptionParser
 
 #-------------------------------------------------------------------------------

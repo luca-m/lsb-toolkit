@@ -29,7 +29,7 @@ VERSION
 
     0.2
 """
-import Image 
+from PIL import Image 
 import re
 import inspect
 import sys 
